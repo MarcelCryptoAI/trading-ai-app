@@ -1,71 +1,60 @@
-// frontend/src/components/TradingViewChart.jsx
+// src/components/TradingViewChart.jsx
 import React, { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 import { subscribeCandles } from '../services/marketService';
 
-export default function TradingViewChart({
-  symbol = 'BTCUSDT',
-  timeframe = '60',
-}) {
+export default function TradingViewChart({ symbol, timeframe }) {
   const containerRef = useRef(null);
-  const candleSeriesRef = useRef(null);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const el = containerRef.current;
+    if (!el) return;
+    el.style.height = '400px';
 
-    // Zorg dat het container div height heeft
-    container.style.height = '400px';
-
-    // 1) Chart aanmaken
-    const chart = createChart(container, {
-      width: container.clientWidth,
+    const chart = createChart(el, {
+      width: el.clientWidth,
       height: 400,
       layout: {
-        background: { color: '#F9FAFB' },
-        textColor: '#333',
+        background: { color: '#1F2937' /* Tailwind gray-800 */ },
+        textColor: '#E5E7EB'    /* gray-200 */,
       },
       grid: {
-        vertLines: { color: '#eee' },
-        horzLines: { color: '#eee' },
+        vertLines: { color: '#374151' /* gray-700 */ },
+        horzLines: { color: '#374151' },
       },
-      rightPriceScale: { borderColor: '#ccc' },
-      timeScale: { borderColor: '#ccc' },
+      rightPriceScale: { borderColor: '#4B5563' /* gray-600 */ },
+      timeScale:       { borderColor: '#4B5563' },
     });
 
-    // 2) Candlestick-series toevoegen
-    const candleSeries = chart.addCandlestickSeries();
-    candleSeriesRef.current = candleSeries;
+    const candleSeries = chart.addCandlestickSeries({
+      upColor:   '#10B981' /* green-500 */,
+      downColor: '#EF4444' /* red-500 */,
+      borderVisible: false,
+      wickUpColor: '#D1FAE5',
+      wickDownColor: '#FEE2E2',
+    });
 
-    // 3) Data subscriptie via SSE
+    // SSE data
     const unsubscribe = subscribeCandles(
-      symbol,
-      timeframe,
-      // init callback: eerst de batch
-      initialData => {
-        candleSeries.setData(initialData);
-      },
-      // live update callback: iedere nieuwe candle
-      newCandle => {
-        candleSeries.update(newCandle);
-      }
+      symbol, timeframe,
+      data => candleSeries.setData(data),
+      candle => candleSeries.update(candle)
     );
 
-    // 4) Responsiveness
-    const resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        chart.applyOptions({ width: entry.contentRect.width });
+    // responsive
+    const ro = new ResizeObserver(entries => {
+      for (let e of entries) {
+        chart.applyOptions({ width: e.contentRect.width });
       }
     });
-    resizeObserver.observe(container);
+    ro.observe(el);
 
-    // Cleanup bij unmount
     return () => {
       unsubscribe();
-      resizeObserver.disconnect();
+      ro.disconnect();
       chart.remove();
     };
   }, [symbol, timeframe]);
 
-  return <div ref={containerRef} className="w-full" />;
+  return <div ref={containerRef} className="w-full rounded-lg overflow-hidden" />;
 }
