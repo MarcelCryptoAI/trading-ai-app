@@ -1,25 +1,19 @@
-// frontend/src/App.jsx
+// src/App.jsx
 import React from 'react';
-import TradingViewChart from './components/TradingViewChart';
-import Dashboard from './components/Dashboard';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import DetailPage from './pages/DetailPage';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      {/* Titel */}
-      <h1 className="text-5xl font-bold text-center mb-8">
-        Trading Dashboard
-      </h1>
+    <Routes>
+      {/* Home kan omleiden of je eigen dashboard zijn */}
+      <Route path="/" element={<Navigate to="/detail/BTCUSDT" replace />} />
 
-      {/* Chart */}
-      <div className="mb-12">
-        <TradingViewChart symbol="BTCUSDT" timeframe="60" />
-      </div>
+      {/* Detail-pagina voor elk symbool */}
+      <Route path="/detail/:symbol" element={<DetailPage />} />
 
-      {/* Indicatoren-Tabs */}
-      <div className="max-w-6xl mx-auto">
-        <Dashboard symbol="BTCUSDT" />
-      </div>
-    </div>
+      {/* Fallback voor onbekende paden */}
+      <Route path="*" element={<div>Page not found</div>} />
+    </Routes>
   );
 }
