@@ -1,7 +1,8 @@
 // frontend/postcss.config.cjs
 module.exports = {
   plugins: {
-    tailwindcss: {},   // i.p.v. d '@tailwindcss/postcss'
+    // Dit was eerst 'tailwindcss', maar we gebruiken nu de aparte PostCSS-plugin
+    '@tailwindcss/postcss': {},
     autoprefixer: {},
   },
 };
