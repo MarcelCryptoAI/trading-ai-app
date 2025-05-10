@@ -1,4 +1,3 @@
-// frontend/src/pages/DetailPage.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { createChart } from 'lightweight-charts';
@@ -33,35 +32,40 @@ export default function DetailPage() {
     if (!el) return;
     el.innerHTML = '';
     const chart = createChart(el, {
-      layout: {
-        background: { color: '#0F172A' },
-        textColor:  '#CBD5E1',
-      },
-      grid: {
-        vertLines: { color: '#1E293B' },
-        horzLines: { color: '#1E293B' },
-      },
+      layout: { background: { color: '#0F172A' }, textColor: '#CBD5E1' },
+      grid:   { vertLines: { color: '#1E293B' }, horzLines: { color: '#1E293B' } },
       rightPriceScale: { borderColor: '#334155' },
       timeScale:       { borderColor: '#334155' },
     });
     const series = chart.addCandlestickSeries({
-      upColor:       '#10B981',
-      downColor:     '#EF4444',
+      upColor: '#10B981', downColor: '#EF4444',
       borderVisible: false,
       wickUpColor:   '#6EE7B7',
       wickDownColor: '#FCA5A5',
     });
+
+    // Converteer timestamps naar seconden
     const unsub = subscribeCandles(
       symbol, timeframe,
-      data   => series.setData(data),
-      candle => series.update(candle),
+      data => {
+        const formatted = data
+          .filter(c => c.time)
+          .map(c => ({ ...c, time: Math.floor(new Date(c.time).getTime()/1000) }));
+        series.setData(formatted);
+      },
+      candle => series.update({
+        ...candle,
+        time: Math.floor(new Date(candle.time).getTime()/1000)
+      }),
     );
+
     const ro = new ResizeObserver(entries => {
       for (let e of entries) {
         chart.applyOptions({ width: e.contentRect.width });
       }
     });
     ro.observe(el);
+
     return () => {
       unsub();
       ro.disconnect();
@@ -82,6 +86,20 @@ export default function DetailPage() {
     if (sortKey === 'ibs_asc')  return a.ibs - b.ibs;
     return a.name.localeCompare(b.name);
   });
+
+  // 4) Samengevoegd AI-advies
+  const active = indicators.filter(i => i.ibs > 70);
+  let longSum = 0, shortSum = 0;
+  active.forEach(i => {
+    const w = i.ibs;
+    const adv = i.advice.toLowerCase();
+    if (adv.includes('long'))      longSum += w;
+    else if (adv.includes('sell') || adv.includes('short')) shortSum += w;
+  });
+  const total = longSum + shortSum;
+  const finalAdvice = longSum > shortSum ? 'Long' : 'Short';
+  const confidence  = total > 0 ? Math.round((Math.max(longSum, shortSum)/total)*100) : 0;
+  const showAdvice  = confidence >= 60;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 space-y-8">
@@ -121,9 +139,7 @@ export default function DetailPage() {
 
       {/* Live Chart */}
       <section>
-        <h2 className="text-xl font-semibold mb-2 text-gray-300">
-          Live Chart
-        </h2>
+        <h2 className="text-xl font-semibold mb-2 text-gray-300">Live Chart</h2>
         <div
           ref={chartContainer}
           className="w-full rounded-2xl overflow-hidden shadow-2xl"
@@ -131,21 +147,27 @@ export default function DetailPage() {
         />
       </section>
 
+      {/* AI Samengevoegd Advies */}
+      <section className="p-4 bg-gray-800 rounded-2xl shadow-2xl space-y-2">
+        <h2 className="text-2xl font-bold text-cyan-400">AI Advies</h2>
+        {active.length === 0 ? (
+          <p className="text-gray-300">Te weinig IBS&gt;70% indicatoren voor advies.</p>
+        ) : showAdvice ? (
+          <>
+            <p className="text-lg text-white"><span className="font-semibold">{finalAdvice}</span> (Confidence: {confidence}%)</p>
+            <p className="text-gray-300 text-sm">Gebaseerd op {active.length} indicatoren met IBS&gt;70%.</p>
+          </>
+        ) : (
+          <p className="text-gray-300">Confidence ({confidence}%) te laag (drempel 60%).</p>
+        )}
+      </section>
+
       {/* Indicator Cards Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {sorted.map(ind => (
-          <IndicatorCard
-            key={ind.name}
-            name={ind.name}
-            params={ind.params}
-            value={ind.value}
-            advice={ind.advice}
-            explanation={ind.explanation}
-            ibs={ind.ibs}
-          />
+          <IndicatorCard key={ind.name} {...ind} />
         ))}
       </section>
-
     </div>
   );
 }
