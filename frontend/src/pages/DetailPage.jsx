@@ -40,6 +40,7 @@ export default function DetailPage() {
   const [model, setModel]           = useState('gpt-4.1-mini-2025-04-14');
   const [tradeModal, setTradeModal] = useState(null);
   const [tradeParams, setTradeParams] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const chartContainer = useRef(null);
 
@@ -144,187 +145,267 @@ export default function DetailPage() {
 
   /* ───────── 11. Render ───────── */
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 space-y-8">
+    <div className="flex min-h-screen bg-gray-900 text-white">
 
-      {/* 11.1 Header + Controls */}
-      <header className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
-        <div className="flex items-center space-x-4">
-          <img src="/logo.png" alt="AI Crypto Analyzer" className="h-16" />
+      {/* ─── Sidebar ─── */}
+      <aside
+        className={`transition-width duration-300 bg-gray-800 p-6 ${
+          sidebarOpen ? 'w-64' : 'w-16'
+        }`}
+      >
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          className="mb-8 text-gray-400 hover:text-white focus:outline-none"
+        >
+          {sidebarOpen ? '⬅️' : '➡️'}
+        </button>
+
+        <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-display text-cyan-500">AI Crypto Analyzer</h1>
-            <p className="text-gray-300 text-sm">
-              Detail voor BYBIT Perp:  {symbol.replace('USDT',' / USDT')}
-            </p>
+            <p className="text-gray-400 text-xs uppercase">Hallo, Marcel</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-4">
 
-          {/* Tijdframe-buttons */}
-          <nav className="flex space-x-2 border-b border-gray-700 pb-1">
-            {TIMEFRAMES.map(tf => (
-              <button
-                key={tf.value}
-                onClick={() => setTimeframe(tf.value)}
-                className={`px-3 py-1 rounded font-medium ${
-                  timeframe === tf.value
-                    ? 'text-cyan-400 border-b-2 border-cyan-400'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {tf.label}
-              </button>
-            ))}
+          <nav className="space-y-4 text-sm">
+            <div>
+              <p className="text-gray-500 uppercase">Dashboard</p>
+              <ul className="mt-2 space-y-1">
+                <li className="hover:text-cyan-400 cursor-pointer">Home</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-gray-500 uppercase">Trades</p>
+              <ul className="mt-2 space-y-1 pl-2">
+                <li className="hover:text-cyan-400 cursor-pointer">Open Trades</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Closed Trades</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-gray-500 uppercase">My Portfolio</p>
+              <ul className="mt-2 space-y-1 pl-2">
+                <li className="hover:text-cyan-400 cursor-pointer">Broker Accounts</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Assets</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-gray-500 uppercase">Trading</p>
+              <ul className="mt-2 space-y-1 pl-2">
+                <li className="hover:text-cyan-400 cursor-pointer">AI Analyzer</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Signal Bots</li>
+                <li className="hover:text-cyan-400 cursor-pointer">DCA Bots</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Grid Bots</li>
+                <li className="hover:text-cyan-400 cursor-pointer">TradingView Bots</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Live Terminal</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Copy Trade</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-gray-500 uppercase">Community</p>
+              <ul className="mt-2 space-y-1 pl-2">
+                <li className="hover:text-cyan-400 cursor-pointer">Forum</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Signal Subscriptions</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Watchlists</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-gray-500 uppercase">My Account</p>
+              <ul className="mt-2 space-y-1 pl-2">
+                <li className="hover:text-cyan-400 cursor-pointer">Upgrade</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Billing</li>
+                <li className="hover:text-cyan-400 cursor-pointer">Settings</li>
+              </ul>
+            </div>
           </nav>
-
-          {/* Combobox voor zoekveld */}
-          <Combobox value={symbol} onChange={val => navigate(`/detail/${val}`)}>
-            <div className="relative">
-              <Combobox.Input
-                className="w-36 bg-gray-800 text-white px-3 py-1 rounded-lg"
-                onChange={e => setQuery(e.target.value)}
-                displayValue={val => val.replace('USDT',' / USDT')}
-                placeholder="Zoek symbool..."
-              />
-              <Combobox.Options className="absolute mt-1 max-h-40 w-36 overflow-auto rounded bg-gray-800 shadow z-10">
-                {filteredSymbols.length > 0 ? (
-                  filteredSymbols.map(s => (
-                    <Combobox.Option
-                      key={s}
-                      value={s}
-                      className={({ active }) =>
-                        `cursor-pointer select-none px-3 py-1 ${
-                          active ? 'bg-cyan-600 text-white' : 'text-gray-200'
-                        }`
-                      }
-                    >
-                      {s.replace('USDT',' / USDT')}
-                    </Combobox.Option>
-                  ))
-                ) : (
-                  <div className="px-3 py-1 text-gray-500">Geen resultaat</div>
-                )}
-              </Combobox.Options>
-            </div>
-          </Combobox>
-
-          {/* Sorteer-dropdown */}
-          <select
-            value={sortKey}
-            onChange={e => setSortKey(e.target.value)}
-            className="bg-gray-800 text-white px-3 py-1 rounded-lg"
-          >
-            {SORT_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          {/* Model-switch */}
-          <select
-            value={model}
-            onChange={e => setModel(e.target.value)}
-            className="bg-gray-800 text-white px-3 py-1 rounded-lg"
-          >
-            <option value="gpt-4.1-mini-2025-04-14">GPT-4.1-mini</option>
-            <option value="gpt-4.1-2025-04-14">GPT-4.1 (volwaardig)</option>
-          </select>
-
         </div>
-      </header>
+      </aside>
 
-      {/* 11.2 Live Chart */}
-      <section
-        className="perspective-1500 transform-gpu transition duration-500
-                   hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
-                   shadow-3d-lg bg-gray-800 rounded-2xl overflow-hidden"
-        style={{ height: 300 }}
-      >
-        <div ref={chartContainer} className="w-full h-full" />
-      </section>
+      {/* ─── Main Content ─── */}
+      <main className="flex-1 p-6 space-y-8 overflow-auto">
 
-      {/* 11.3 AI Advies */}
-      <section
-        className="perspective-1500 transform-gpu transition duration-500
-                   hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
-                   shadow-3d-lg bg-gray-800 rounded-2xl p-6 space-y-4"
-      >
-        <h2 className="text-2xl font-bold text-cyan-400">AI Advies</h2>
-        {adviceData.available ? (
-          <>
-            <p>
-              <span className="font-semibold">{adviceData.direction}</span>{' '}
-              <span className="ml-2 text-gray-300">({adviceData.confidence}%)</span>
-            </p>
-            <p className="text-gray-400 text-sm">
-              Gebaseerd op {adviceData.usedCount} IBS&gt;70%
-            </p>
-            <div className="mt-4 bg-gray-700 rounded-lg p-4 text-sm text-gray-200">
-              Waarom we voor een <strong>{adviceData.direction.toLowerCase()}</strong>-positie kiezen.
+        {/* 11.1 Header + Controls */}
+        <header className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
+          <div className="flex items-center space-x-4">
+            <img src="/logo.png" alt="AI Crypto Analyzer" className="h-16" />
+            <div>
+              <h1 className="text-3xl font-display text-cyan-500">AI Crypto Analyzer</h1>
+              <p className="text-gray-300 text-sm">
+                Detail voor BYBIT Perp: {symbol.replace('USDT',' / USDT')}
+              </p>
             </div>
-            <div className="flex space-x-4 mt-4">
-              {['Laag','Middel','Hoog'].map(level => (
+          </div>
+          <div className="flex items-center space-x-4">
+
+            {/* Tijdframe-buttons */}
+            <nav className="flex space-x-2 border-b border-gray-700 pb-1">
+              {TIMEFRAMES.map(tf => (
                 <button
-                  key={level}
-                  onClick={() => onTradeClick(level)}
-                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded font-medium"
+                  key={tf.value}
+                  onClick={() => setTimeframe(tf.value)}
+                  className={`px-3 py-1 rounded font-medium ${
+                    timeframe === tf.value
+                      ? 'text-cyan-400 border-b-2 border-cyan-400'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
                 >
-                  {level} risico
+                  {tf.label}
                 </button>
               ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="italic text-gray-300">Niet genoeg data of confidence te laag.</p>
-            <div className="flex space-x-4 mt-4">
-              {['Laag','Middel','Hoog'].map(level => (
-                <button
-                  key={level}
-                  disabled
-                  className="px-4 py-2 bg-cyan-500 opacity-40 cursor-not-allowed rounded"
-                >
-                  {level} risico
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+            </nav>
 
-      {/* 11.4 Trade Modal */}
-      <Modal open={!!tradeModal} onClose={() => setTradeModal(null)}>
-        <h2 className="text-xl font-bold mb-4">Tradeadvies ({tradeModal} risico)</h2>
-        {tradeParams ? (
-          <div className="space-y-2 text-sm">
-            <p>Size: {tradeParams.sizePct}% van saldo</p>
-            <p>Leverage: {tradeParams.leverage}× ({tradeParams.leverageType})</p>
-            <p>Entries: {tradeParams.entries.join(', ')}</p>
-            <p>Take Profits: {tradeParams.takeProfits.join(', ')}</p>
-            <p>Stop Loss: {tradeParams.stopLoss}</p>
-            <button
-              className="mt-4 w-full bg-green-600 hover:bg-green-700 py-2 rounded"
-              onClick={() => alert('🚀 Execute Trade!')}
+            {/* Combobox */}
+            <Combobox value={symbol} onChange={val => navigate(`/detail/${val}`)}>
+              <div className="relative">
+                <Combobox.Input
+                  className="w-36 bg-gray-800 text-white px-3 py-1 rounded-lg"
+                  onChange={e => setQuery(e.target.value)}
+                  displayValue={val => val.replace('USDT',' / USDT')}
+                  placeholder="Zoek symbool..."
+                />
+                <Combobox.Options className="absolute mt-1 max-h-40 w-36 overflow-auto rounded bg-gray-800 shadow z-10">
+                  {filteredSymbols.length > 0 ? (
+                    filteredSymbols.map(s => (
+                      <Combobox.Option
+                        key={s}
+                        value={s}
+                        className={({ active }) =>
+                          `cursor-pointer select-none px-3 py-1 ${
+                            active ? 'bg-cyan-600 text-white' : 'text-gray-200'
+                          }`
+                        }
+                      >
+                        {s.replace('USDT',' / USDT')}
+                      </Combobox.Option>
+                    ))
+                  ) : (
+                    <div className="px-3 py-1 text-gray-500">Geen resultaat</div>
+                  )}
+                </Combobox.Options>
+              </div>
+            </Combobox>
+
+            {/* Sorteer-dropdown */}
+            <select
+              value={sortKey}
+              onChange={e => setSortKey(e.target.value)}
+              className="bg-gray-800 text-white px-3 py-1 rounded-lg"
             >
-              Execute Trade
-            </button>
-          </div>
-        ) : (
-          <p>Laden advies…</p>
-        )}
-      </Modal>
+              {SORT_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
 
-      {/* 11.5 Indicator Cards Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {sortedIndicators.map(ind => (
-          <div
-            key={ind.name}
-            className="perspective-1500 transform-gpu transition duration-500
-                       hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
-                       shadow-3d-md bg-gray-800 rounded-2xl"
-          >
-            <IndicatorCard {...ind} model={model} />
+            {/* Model-switch */}
+            <select
+              value={model}
+              onChange={e => setModel(e.target.value)}
+              className="bg-gray-800 text-white px-3 py-1 rounded-lg"
+            >
+              <option value="gpt-4.1-mini-2025-04-14">GPT-4.1-mini</option>
+              <option value="gpt-4.1-2025-04-14">GPT-4.1 (volwaardig)</option>
+            </select>
+
           </div>
-        ))}
-      </section>
+        </header>
+
+        {/* 11.2 Live Chart */}
+        <section
+          className="perspective-1500 transform-gpu transition duration-500
+                     hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
+                     shadow-3d-lg bg-gray-800 rounded-2xl overflow-hidden"
+          style={{ height: 300 }}
+        >
+          <div ref={chartContainer} className="w-full h-full" />
+        </section>
+
+        {/* 11.3 AI Advies */}
+        <section
+          className="perspective-1500 transform-gpu transition duration-500
+                     hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
+                     shadow-3d-lg bg-gray-800 rounded-2xl p-6 space-y-4"
+        >
+          <h2 className="text-2xl font-bold text-cyan-400">AI Advies</h2>
+          {adviceData.available ? (
+            <>
+              <p>
+                <span className="font-semibold">{adviceData.direction}</span>{' '}
+                <span className="ml-2 text-gray-300">({adviceData.confidence}%)</span>
+              </p>
+              <p className="text-gray-400 text-sm">
+                Gebaseerd op {adviceData.usedCount} IBS&gt;70%
+              </p>
+              <div className="mt-4 bg-gray-700 rounded-lg p-4 text-sm text-gray-200">
+                Waarom we voor een <strong>{adviceData.direction.toLowerCase()}</strong>-positie kiezen.
+              </div>
+              <div className="flex space-x-4 mt-4">
+                {['Laag','Middel','Hoog'].map(level => (
+                  <button
+                    key={level}
+                    onClick={() => onTradeClick(level)}
+                    className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded font-medium"
+                  >
+                    {level} risico
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="italic text-gray-300">Niet genoeg data of confidence te laag.</p>
+              <div className="flex space-x-4 mt-4">
+                {['Laag','Middel','Hoog'].map(level => (
+                  <button
+                    key={level}
+                    disabled
+                    className="px-4 py-2 bg-cyan-500 opacity-40 cursor-not-allowed rounded"
+                  >
+                    {level} risico
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        {/* 11.4 Trade Modal */}
+        <Modal open={!!tradeModal} onClose={() => setTradeModal(null)}>
+          <h2 className="text-xl font-bold mb-4">Tradeadvies ({tradeModal} risico)</h2>
+          {tradeParams ? (
+            <div className="space-y-2 text-sm">
+              <p>Size: {tradeParams.sizePct}% van saldo</p>
+              <p>Leverage: {tradeParams.leverage}× ({tradeParams.leverageType})</p>
+              <p>Entries: {tradeParams.entries.join(', ')}</p>
+              <p>Take Profits: {tradeParams.takeProfits.join(', ')}</p>
+              <p>Stop Loss: {tradeParams.stopLoss}</p>
+              <button
+                className="mt-4 w-full bg-green-600 hover:bg-green-700 py-2 rounded"
+                onClick={() => alert('🚀 Execute Trade!')}
+              >
+                Execute Trade
+              </button>
+            </div>
+          ) : (
+            <p>Laden advies…</p>
+          )}
+        </Modal>
+
+        {/* 11.5 Indicator Cards Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {sortedIndicators.map(ind => (
+            <div
+              key={ind.name}
+              className="perspective-1500 transform-gpu transition duration-500
+                         hover:rotate-y-3 hover:-rotate-x-2 hover:scale-105
+                         shadow-3d-md bg-gray-800 rounded-2xl"
+            >
+              <IndicatorCard {...ind} model={model} />
+            </div>
+          ))}
+        </section>
+      </main>
     </div>
   );
 }
